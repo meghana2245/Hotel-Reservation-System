@@ -1,0 +1,16 @@
+# Environments
+venv/
+env/
+ENV/
+
+# Python compiled files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Environment Variables / Secrets (CRITICAL)
+.env
+
+# VS Code / Editor settings (Optional but recommended)
+.vscode/

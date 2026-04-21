@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+
+{% block title %}Billing{% endblock %}
+{% block page_title %}Billing{% endblock %}
+
+{% block content %}
+<div class="flex items-center justify-between mb-6">
+    <div>
+        <h2 class="text-2xl font-bold text-slate-800">Billing History</h2>
+        <p class="text-sm text-slate-500 mt-0.5">All service charges applied to guest reservations</p>
+    </div>
+    <a href="{{ url_for('add_service_charge') }}"
+       class="inline-flex items-center gap-2 bg-amber-500 hover:bg-amber-400 text-white font-semibold text-sm px-4 py-2.5 rounded-xl shadow-sm shadow-amber-500/30 transition-all hover:shadow-md hover:-translate-y-0.5">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+        </svg>
+        Add Charge
+    </a>
+</div>
+
+<div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+    {% if charges %}
+    <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+            <thead>
+                <tr class="bg-slate-50 border-b border-slate-100">
+                    <th class="text-left px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-widest">#</th>
+                    <th class="text-left px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-widest">Guest</th>
+                    <th class="text-left px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-widest">Service</th>
+                    <th class="text-left px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-widest">Qty</th>
+                    <th class="text-left px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-widest">Date Ordered</th>
+                    <th class="text-left px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-widest">Total Charge</th>
+                    <th class="text-left px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-widest">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-50">
+                {% for charge in charges %}
+                <tr class="hover:bg-slate-50 transition-colors">
+                    <td class="px-6 py-4 text-slate-400 font-mono text-xs">#{{ charge.ChargeID }}</td>
+                    <td class="px-6 py-4 font-medium text-slate-800">{{ charge.GuestName }}</td>
+                    <td class="px-6 py-4">
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-50 text-purple-700 text-xs font-semibold border border-purple-100">
+                            {{ charge.ServiceName }}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 text-slate-600 font-semibold">× {{ charge.Quantity }}</td>
+                    <td class="px-6 py-4 text-slate-500 text-xs">
+                        {{ charge.DateOrdered.strftime('%d %b %Y, %I:%M %p') if charge.DateOrdered else '—' }}
+                    </td>
+                    <td class="px-6 py-4">
+                        <span class="font-bold text-slate-700 text-base">
+                            ₹{{ "%.2f"|format(charge.TotalCharge) }}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4">
+                        <div class="flex items-center gap-2">
+                            <a href="{{ url_for('edit_service_charge', id=charge.ChargeID) }}"
+                               class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-slate-50 text-slate-700 hover:bg-emerald-50 text-xs font-semibold border border-slate-200 transition-all">
+                                ✏️ Edit
+                            </a>
+                            <a href="{{ url_for('delete_service_charge', id=charge.ChargeID) }}"
+                               onclick="return confirm('Are you sure you want to delete this charge?');"
+                               class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-slate-50 text-slate-700 hover:bg-emerald-50 text-xs font-semibold border border-slate-200 transition-all">
+                                🗑️ Delete
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+
+        </table>
+    </div>
+    <!-- Summary footer -->
+    <div class="px-6 py-4 bg-slate-50 border-t border-slate-100 flex items-center justify-between">
+        <p class="text-xs text-slate-400 font-medium">{{ charges|length }} charge{{ 's' if charges|length != 1 else '' }} total</p>
+        <p class="text-sm font-bold text-slate-700">
+            Grand Total:
+            <span class="text-amber-500 text-base ml-1">
+                ₹{{ "%.2f"|format(charges|sum(attribute='TotalCharge')) }}
+            </span>
+        </p>
+    </div>
+    {% else %}
+    <div class="flex flex-col items-center justify-center py-20 text-center">
+        <div class="w-16 h-16 rounded-2xl bg-slate-50 flex items-center justify-center mb-4">
+            <svg class="w-8 h-8 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                      d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2z"/>
+            </svg>
+        </div>
+        <p class="text-slate-600 font-semibold">No service charges recorded.</p>
+        <p class="text-slate-400 text-sm mt-1">Add a charge to start billing guests.</p>
+        <a href="{{ url_for('add_service_charge') }}" class="mt-4 text-amber-500 hover:text-amber-500 text-sm font-medium underline underline-offset-2">
+            Add a charge →
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

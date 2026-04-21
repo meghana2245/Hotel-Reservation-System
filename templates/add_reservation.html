@@ -1,0 +1,177 @@
+{% extends "base.html" %}
+
+{% block title %}New Reservation{% endblock %}
+{% block page_title %}New Reservation{% endblock %}
+
+{% block sidebar_nav %}
+<a href="{{ url_for('admin_dashboard') if session.get('role') == 'Admin' else url_for('staff_dashboard') }}"
+    class="sidebar-link flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium text-slate-400">
+    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+    </svg>
+    Dashboard
+</a>
+<a href="{{ url_for('guests') }}"
+    class="sidebar-link flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium text-slate-400">
+    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+    </svg>
+    Guests
+</a>
+<a href="{{ url_for('rooms') }}"
+    class="sidebar-link flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium text-slate-400">
+    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+    </svg>
+    Rooms
+</a>
+<a href="{{ url_for('reservations') }}"
+    class="sidebar-link active flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium text-white">
+    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+    </svg>
+    Reservations
+</a>
+{% endblock %}
+
+{% block content %}
+<div class="flex items-center gap-2 text-sm text-slate-500 mb-6">
+    <a href="{{ url_for('reservations') }}" class="hover:text-amber-500 transition-colors">Reservations</a>
+    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+    </svg>
+    <span class="text-slate-800 font-medium">New Reservation</span>
+</div>
+
+<div class="max-w-2xl">
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-8">
+        <h2 class="text-xl font-bold text-slate-800 mb-1">Create a Reservation</h2>
+        <p class="text-sm text-slate-500 mb-7">
+            All dropdowns below are populated live from the database.
+            The Rooms list shows <strong>only Available rooms</strong>.
+        </p>
+
+        <form method="POST" action="{{ url_for('add_reservation') }}" class="space-y-5">
+
+            <!-- Guest -->
+            <div>
+                <label for="guest_id"
+                    class="block text-xs font-semibold text-slate-500 uppercase tracking-widest mb-1.5">
+                    Guest <span class="text-red-400">*</span>
+                </label>
+                <select id="guest_id" name="guest_id" required
+                    class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all bg-white cursor-pointer">
+                    <option value="" disabled selected>Select a guest…</option>
+                    {% for guest in guests %}
+                    <option value="{{ guest.GuestID }}">{{ guest.FirstName }} {{ guest.LastName }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Room (Available only) -->
+            <div>
+                <label for="room_id"
+                    class="block text-xs font-semibold text-slate-500 uppercase tracking-widest mb-1.5">
+                    Room <span class="text-red-400">*</span>
+                    <span class="normal-case font-normal text-slate-400 ml-1">(Available only)</span>
+                </label>
+                <select id="room_id" name="room_id" required
+                    class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all bg-white cursor-pointer">
+                    <option value="" disabled selected>Select a room…</option>
+                    {% for room in rooms %}
+                    <option value="{{ room.RoomID }}">Room {{ room.RoomNumber }} — Floor {{ room.Floor }}</option>
+                    {% else %}
+                    <option disabled>No available rooms at this time</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Staff Member (Recorded By) -->
+            <div>
+                <label for="staff_id"
+                    class="block text-xs font-semibold text-slate-500 uppercase tracking-widest mb-1.5">
+                    Recorded By Staff <span class="text-red-400">*</span>
+                </label>
+                <select id="staff_id" name="staff_id" required
+                    class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all bg-white cursor-pointer">
+                    <option value="" disabled selected>Select a staff member…</option>
+                    {% for member in staff %}
+                    <option value="{{ member.StaffID }}">{{ member.FirstName }} {{ member.LastName }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Assigned Staff Member -->
+            <div>
+                <label for="assigned_staff_id"
+                    class="block text-xs font-semibold text-slate-500 uppercase tracking-widest mb-1.5">
+                    Assigned Staff Member
+                    <span class="normal-case font-normal text-slate-400 ml-1">(optional — shown on staff profile)</span>
+                </label>
+                <select id="assigned_staff_id" name="assigned_staff_id"
+                    class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all bg-white cursor-pointer">
+                    <option value="">— None —</option>
+                    {% for member in staff %}
+                    <option value="{{ member.StaffID }}">{{ member.FirstName }} {{ member.LastName }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Dates -->
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label for="check_in"
+                        class="block text-xs font-semibold text-slate-500 uppercase tracking-widest mb-1.5">Check-In
+                        Date <span class="text-red-400">*</span></label>
+                    <input type="date" id="check_in" name="check_in" required
+                        class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all">
+                </div>
+                <div>
+                    <label for="check_out"
+                        class="block text-xs font-semibold text-slate-500 uppercase tracking-widest mb-1.5">Check-Out
+                        Date <span class="text-red-400">*</span></label>
+                    <input type="date" id="check_out" name="check_out" required
+                        class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all">
+                </div>
+            </div>
+
+            <!-- Booking Status -->
+            <div>
+                <label for="booking_status"
+                    class="block text-xs font-semibold text-slate-500 uppercase tracking-widest mb-1.5">Booking
+                    Status</label>
+                <select id="booking_status" name="booking_status"
+                    class="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all bg-white cursor-pointer">
+                    <option value="Confirmed" selected>Confirmed</option>
+                    <option value="Checked-In">Checked-In (marks room as Occupied)</option>
+                    <option value="Checked-Out">Checked-Out</option>
+                    <option value="Cancelled">Cancelled</option>
+                </select>
+                <p class="text-xs text-slate-400 mt-1.5">
+                    ⚡ Selecting <strong>Checked-In</strong> will automatically update the room's status to
+                    <strong>Occupied</strong>.
+                </p>
+            </div>
+
+            <div class="flex items-center gap-3 pt-2">
+                <button type="submit" id="submit-reservation-btn"
+                    class="bg-amber-500 hover:bg-amber-400 text-white font-semibold text-sm px-6 py-2.5 rounded-xl shadow-sm shadow-amber-500/30 transition-all hover:shadow-md hover:-translate-y-0.5 cursor-pointer">
+                    Create Reservation
+                </button>
+                <button type="reset"
+                    class="bg-slate-50 hover:bg-slate-200 text-slate-600 font-semibold text-sm px-5 py-2.5 rounded-xl transition-all cursor-pointer">
+                    Reset
+                </button>
+                <a href="{{ url_for('reservations') }}"
+                    class="text-sm text-slate-500 hover:text-slate-700 font-medium transition-colors px-4 py-2.5">
+                    Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,144 @@
+{% extends "base.html" %}
+{% block title %}Invoice #{{ invoice.InvoiceID }}{% endblock %}
+{% block page_title %}Invoice #{{ invoice.InvoiceID }}{% endblock %}
+
+{% block content %}
+<div class="flex items-center justify-between mb-6">
+    <div class="flex items-center gap-2 text-sm text-slate-500">
+        <a href="{{ url_for('invoices') }}" class="hover:text-amber-500 transition-colors">Invoices</a>
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+        </svg>
+        <span class="text-slate-800 font-medium">Invoice #{{ invoice.InvoiceID }}</span>
+    </div>
+    <button onclick="window.print()"
+            class="inline-flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-white font-semibold text-sm px-4 py-2.5 rounded-xl transition-all">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
+        </svg>
+        Print Invoice
+    </button>
+</div>
+
+<div class="max-w-3xl mx-auto space-y-6" id="invoice-body">
+
+    <!-- Header card -->
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-8">
+        <div class="flex items-start justify-between mb-8">
+            <div>
+                <div class="flex items-center gap-3 mb-2">
+                    <div class="w-10 h-10 rounded-lg bg-orange-500/20 text-orange-500 flex items-center justify-center">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <p class="text-slate-800 font-bold text-lg leading-tight mt-1">OmniStay</p>
+                    </div>
+                </div>
+            </div>
+            <div class="text-right">
+                <p class="text-3xl font-black text-slate-800">#{{ invoice.InvoiceID }}</p>
+                <span class="inline-block mt-1 px-3 py-1 bg-emerald-50 text-emerald-700 text-xs font-semibold rounded-full border border-emerald-100">PAID • CHECKED OUT</span>
+            </div>
+        </div>
+
+        <!-- Guest + Room info grid -->
+        <div class="grid grid-cols-2 gap-8 pt-6 border-t border-slate-100">
+            <div>
+                <p class="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-3">Guest Details</p>
+                <p class="font-semibold text-slate-800 text-base">{{ invoice.GuestName }}</p>
+                <p class="text-slate-500 text-sm mt-0.5">{{ invoice.Email or '—' }}</p>
+                <p class="text-slate-500 text-sm">{{ invoice.Phone or '—' }}</p>
+            </div>
+            <div>
+                <p class="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-3">Stay Details</p>
+                <p class="font-semibold text-slate-800">Room {{ invoice.RoomNumber }}
+                    <span class="text-slate-400 font-normal text-sm">— Floor {{ invoice.Floor }}</span>
+                </p>
+                <p class="text-slate-500 text-sm mt-0.5">{{ invoice.CategoryName }}</p>
+                <div class="flex gap-4 mt-2 text-sm">
+                    <span class="text-slate-500">Check-in: <strong class="text-slate-700">{{ invoice.CheckInDate }}</strong></span>
+                    <span class="text-slate-500">Check-out: <strong class="text-slate-700">{{ invoice.CheckOutDate }}</strong></span>
+                </div>
+                <p class="text-slate-500 text-sm mt-0.5">
+                    <strong class="text-slate-700">{{ days_stayed }}</strong> night{{ 's' if days_stayed != 1 else '' }}
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charges breakdown -->
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+        <div class="px-8 py-5 border-b border-slate-100">
+            <p class="text-sm font-semibold text-slate-700">Itemised Charges</p>
+        </div>
+        <table class="w-full text-sm">
+            <thead>
+                <tr class="bg-slate-50 border-b border-slate-100">
+                    <th class="text-left px-8 py-3 text-xs font-semibold text-slate-500 uppercase tracking-widest">Description</th>
+                    <th class="text-right px-8 py-3 text-xs font-semibold text-slate-500 uppercase tracking-widest">Qty</th>
+                    <th class="text-right px-8 py-3 text-xs font-semibold text-slate-500 uppercase tracking-widest">Unit Price</th>
+                    <th class="text-right px-8 py-3 text-xs font-semibold text-slate-500 uppercase tracking-widest">Amount</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-50">
+                <!-- Room cost row -->
+                <tr>
+                    <td class="px-8 py-4">
+                        <p class="font-medium text-slate-800">Room {{ invoice.RoomNumber }} — {{ invoice.CategoryName }}</p>
+                        <p class="text-xs text-slate-400 mt-0.5">{{ days_stayed }} night{{ 's' if days_stayed != 1 else '' }} @ ₹{{ "%.2f"|format(invoice.PricePerNight) }}/night</p>
+                    </td>
+                    <td class="px-8 py-4 text-right text-slate-600">{{ days_stayed }}</td>
+                    <td class="px-8 py-4 text-right text-slate-600">₹{{ "%.2f"|format(invoice.PricePerNight) }}</td>
+                    <td class="px-8 py-4 text-right font-semibold text-slate-800">₹{{ "%.2f"|format(days_stayed * invoice.PricePerNight) }}</td>
+                </tr>
+                <!-- Service charge rows -->
+                {% for charge in charges %}
+                <tr>
+                    <td class="px-8 py-4">
+                        <p class="font-medium text-slate-800">{{ charge.ServiceName }}</p>
+                        <p class="text-xs text-slate-400 mt-0.5">Ordered: {{ charge.DateOrdered.strftime('%d %b %Y') if charge.DateOrdered else '—' }}</p>
+                    </td>
+                    <td class="px-8 py-4 text-right text-slate-600">{{ charge.Quantity }}</td>
+                    <td class="px-8 py-4 text-right text-slate-600">₹{{ "%.2f"|format(charge.BasePrice) }}</td>
+                    <td class="px-8 py-4 text-right font-semibold text-slate-800">₹{{ "%.2f"|format(charge.TotalCharge) }}</td>
+                </tr>
+                {% endfor %}
+                {% if not charges %}
+                <tr>
+                    <td colspan="4" class="px-8 py-4 text-slate-400 text-xs italic">No additional services billed.</td>
+                </tr>
+                {% endif %}
+            </tbody>
+        </table>
+
+        <!-- Totals footer -->
+        <div class="px-8 py-6 bg-slate-50 border-t border-slate-100 space-y-2">
+            <div class="flex justify-between text-sm text-slate-600 pb-2 border-b border-slate-200">
+                <span>Subtotal</span>
+                <span>₹{{ "%.2f"|format(invoice.TotalAmount) }}</span>
+            </div>
+            <div class="flex justify-between text-sm text-slate-500">
+                <span>Tax (10%)</span>
+                <span>₹{{ "%.2f"|format(invoice.Tax) }}</span>
+            </div>
+            <div class="flex justify-between text-lg font-black text-slate-900 pt-1">
+                <span>Grand Total</span>
+                <span class="text-emerald-600">₹{{ "%.2f"|format(invoice.GrandTotal) }}</span>
+            </div>
+        </div>
+    </div>
+
+    <p class="text-center text-xs text-slate-400 pb-4">Thank you for staying at OmniStay. We hope to see you again!</p>
+</div>
+
+<style>
+    @media print {
+        aside, header, .print-hide, nav { display: none !important; }
+        body { background: white !important; }
+        #invoice-body { max-width: 100%; }
+    }
+</style>
+{% endblock %}

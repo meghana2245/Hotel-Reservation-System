@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+
+{% block title %}Services{% endblock %}
+{% block page_title %}Services{% endblock %}
+
+{% block content %}
+<div class="flex items-center justify-between mb-6">
+    <div>
+        <h2 class="text-2xl font-bold text-slate-800">Services Catalog</h2>
+        <p class="text-sm text-slate-500 mt-0.5">All available hotel services and their prices</p>
+    </div>
+    {% if session.get('role') == 'Admin' %}
+    <a href="{{ url_for('add_service') }}"
+       class="inline-flex items-center gap-2 bg-amber-500 hover:bg-amber-400 text-white font-semibold text-sm px-4 py-2.5 rounded-xl shadow-sm shadow-amber-500/30 transition-all hover:shadow-md hover:-translate-y-0.5">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+        </svg>
+        Add Service
+    </a>
+    {% endif %}
+</div>
+
+<div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+    {% if services %}
+    <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+            <thead>
+                <tr class="bg-slate-50 border-b border-slate-100">
+                    <th class="text-left px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-widest">ID</th>
+                    <th class="text-left px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-widest">Service Name</th>
+                    <th class="text-left px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-widest">Base Price</th>
+                    <th class="text-left px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-widest">Description</th>
+                    {% if session.get('role') == 'Admin' %}
+                    <th class="text-left px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-widest">Actions</th>
+                    {% endif %}
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-50">
+                {% for service in services %}
+                <tr class="hover:bg-slate-50 transition-colors">
+                    <td class="px-6 py-4 text-slate-400 font-mono text-xs">#{{ service.ServiceID }}</td>
+                    <td class="px-6 py-4">
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 rounded-lg bg-emerald-50 text-amber-500 flex items-center justify-center shrink-0">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                          d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                                </svg>
+                            </div>
+                            <span class="font-semibold text-slate-800">{{ service.ServiceName }}</span>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4">
+                        <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-50 text-slate-700 font-bold text-sm border border-slate-200">
+                            ₹{{ "%.2f"|format(service.BasePrice) }}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 text-slate-500 text-sm">{{ service.Description or '—' }}</td>
+                    {% if session.get('role') == 'Admin' %}
+                    <td class="px-6 py-4">
+                        <div class="flex items-center gap-2">
+                            <a href="{{ url_for('edit_service', id=service.ServiceID) }}"
+                               class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-slate-50 text-slate-700 hover:bg-emerald-50 text-xs font-semibold border border-slate-200 transition-all">
+                                ✏️ Edit
+                            </a>
+                            <a href="{{ url_for('delete_service', id=service.ServiceID) }}"
+                               onclick="return confirm('Are you sure you want to delete this service?');"
+                               class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-slate-50 text-slate-700 hover:bg-emerald-50 text-xs font-semibold border border-slate-200 transition-all">
+                                🗑️ Delete
+                            </a>
+                        </div>
+                    </td>
+                    {% endif %}
+                </tr>
+                {% endfor %}
+            </tbody>
+
+        </table>
+    </div>
+    <div class="px-6 py-3 bg-slate-50 border-t border-slate-100 text-xs text-slate-400 font-medium">
+        {{ services|length }} service{{ 's' if services|length != 1 else '' }} available
+    </div>
+    {% else %}
+    <div class="flex flex-col items-center justify-center py-20 text-center">
+        <div class="w-16 h-16 rounded-2xl bg-slate-50 flex items-center justify-center mb-4">
+            <svg class="w-8 h-8 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                      d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+            </svg>
+        </div>
+        <p class="text-slate-600 font-semibold">No services found.</p>
+        <p class="text-slate-400 text-sm mt-1">Add your first service to the catalog.</p>
+        {% if session.get('role') == 'Admin' %}
+        <a href="{{ url_for('add_service') }}" class="mt-4 text-amber-500 hover:text-amber-500 text-sm font-medium underline underline-offset-2">
+            Add a service →
+        </a>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
