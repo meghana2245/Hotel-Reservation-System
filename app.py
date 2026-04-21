@@ -380,11 +380,11 @@ def reservations():
                res.BookingStatus,
                CONCAT(g.FirstName, ' ', g.LastName) AS GuestName,
                r.RoomNumber,
-               s.FirstName AS StaffName
+               IFNULL(s.FirstName, 'Unassigned') AS StaffName
         FROM   Reservations res
         JOIN   Guests g   ON res.GuestID  = g.GuestID
         JOIN   Rooms  r   ON res.RoomID   = r.RoomID
-        JOIN   Staff  s   ON res.StaffID  = s.StaffID
+        LEFT JOIN Staff  s   ON res.AssignedStaffID  = s.StaffID
         ORDER  BY res.ReservationID DESC
     """)
     reservations_list = cursor.fetchall()
@@ -402,7 +402,6 @@ def add_reservation():
     if request.method == 'POST':
         guest_id           = request.form.get('guest_id')
         room_id            = request.form.get('room_id')
-        staff_id           = request.form.get('staff_id')
         assigned_staff_id  = request.form.get('assigned_staff_id') or None
         check_in           = request.form.get('check_in')
         check_out          = request.form.get('check_out')
@@ -412,10 +411,10 @@ def add_reservation():
             cursor.execute(
                 """
                 INSERT INTO Reservations
-                    (GuestID, RoomID, StaffID, AssignedStaffID, CheckInDate, CheckOutDate, BookingStatus)
-                VALUES (%s, %s, %s, %s, %s, %s, %s)
+                    (GuestID, RoomID, AssignedStaffID, CheckInDate, CheckOutDate, BookingStatus)
+                VALUES (%s, %s, %s, %s, %s, %s)
                 """,
-                (guest_id, room_id, staff_id, assigned_staff_id, check_in, check_out, booking_status)
+                (guest_id, room_id, assigned_staff_id, check_in, check_out, booking_status)
             )
             # If checking in immediately, mark the room as Occupied
             if booking_status == 'Checked-In':
@@ -460,7 +459,6 @@ def edit_reservation(id):
     if request.method == 'POST':
         guest_id          = request.form.get('guest_id')
         room_id           = request.form.get('room_id')
-        staff_id          = request.form.get('staff_id')
         assigned_staff_id = request.form.get('assigned_staff_id') or None
         check_in          = request.form.get('check_in')
         check_out         = request.form.get('check_out')
@@ -473,10 +471,10 @@ def edit_reservation(id):
             old = cursor.fetchone()
             cursor.execute(
                 """UPDATE Reservations
-                   SET GuestID=%s, RoomID=%s, StaffID=%s, AssignedStaffID=%s,
+                   SET GuestID=%s, RoomID=%s, AssignedStaffID=%s,
                        CheckInDate=%s, CheckOutDate=%s, BookingStatus=%s
                    WHERE ReservationID=%s""",
-                (guest_id, room_id, staff_id, assigned_staff_id,
+                (guest_id, room_id, assigned_staff_id,
                  check_in, check_out, booking_status, id)
             )
             # Sync room status
@@ -500,7 +498,7 @@ def edit_reservation(id):
             conn.close()
 
     cursor.execute("""
-        SELECT ReservationID, GuestID, RoomID, StaffID, AssignedStaffID,
+        SELECT ReservationID, GuestID, RoomID, AssignedStaffID,
                CheckInDate, CheckOutDate, BookingStatus
         FROM   Reservations WHERE ReservationID = %s
     """, (id,))
